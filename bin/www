@@ -8,7 +8,8 @@ var app = require("../app");
 var debug = require("debug")("chat-application:server");
 var http = require("http");
 const socketIO = require("socket.io");
-
+const { generateMessage, generateMessageLocation } = require("../utils/message");
+const { isRealString } = require("../utils/isRealString");
 /**
  * Get port from environment and store in Express.
  */
@@ -29,32 +30,32 @@ let io = socketIO(server);
 io.on("connection", socket => {
 	console.log("A new User just connected");
 
-	socket.emit("newMessage", {
-		from: "Admin",
-		text: "Welcome to the chat App",
-		createdAt: new Date().getTime(),
-	});
-	//for new user joined message to everyone
-	socket.broadcast.emit("newMessage", {
-		from: "Admin",
-		text: "New User joined",
-		createdAt: new Date().getTime(),
-	});
+	socket.on("join", (params, callback) => {
+		if (!isRealString(params.name) || !isRealString(params.room)) {
+			callback("Name and room are required");
+		}
+		console.log(socket.id);
+		//joining room
+		socket.join(params.room);
 
-	socket.on("createMessage", message => {
+		socket.emit("newMessage", generateMessage("Admin", "Welcome to the chat-app "));
+		//for new user joined message to everyone
+		socket.broadcast.emit("newMessage", generateMessage("Admin", "New User Joined"));
+		callback();
+	});
+	socket.on("createMessage", (message, callback) => {
 		console.log("CreateMessage", message);
 
-		io.emit("newMessage", {
-			from: message.from,
-			text: message.text,
-			createdAt: new Date().getTime(),
-		});
-
+		io.emit("newMessage", generateMessage(message.from, message.text));
+		// callback("this is the server");
 		// socket.broadcast.emit("newMessage", {
 		// 	from: message.from,
 		// 	text: message.text,
 		// 	createdAt: new Date().getTime(),
 		// });
+	});
+	socket.on("createLocationMessage", coords => {
+		io.emit("newLocationMessage", generateMessageLocation("Admin", coords.lat, coords.lng));
 	});
 
 	socket.on("disconnect", () => {
