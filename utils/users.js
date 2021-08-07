@@ -21,6 +21,7 @@ class Users {
 		return namesArray;
 	}
 	getUser(id) {
+		console.log("id:::", id);
 		return this.users.filter(user => user.id === id)[0];
 	}
 
