@@ -74,7 +74,9 @@ document.querySelector("#submit-btn").addEventListener("click", function (e) {
 		{
 			text: document.querySelector(`input[name="message"]`).value,
 		},
-		function () {}
+		function () {
+			document.querySelector('input[name="message"]').value = "";
+		}
 	);
 });
 
